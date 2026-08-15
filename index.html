@@ -18,6 +18,29 @@
     margin: 0 auto 32px;
   }
 
+  .voltar {
+    max-width: 1000px;
+    margin: 0 auto 20px;
+  }
+
+  .voltar a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: 1px solid #dcd7cb;
+    border-radius: 6px;
+    background: #fff;
+    color: #1a1d1f;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  .voltar a:hover {
+    background: #f0ede5;
+  }
+
   /* Container principal — cada passo (imagem + texto) empilha aqui embaixo do outro */
   .container {
     max-width: 1000px;
@@ -71,6 +94,33 @@
     display: flex;
   }
 
+  /* Botão flutuante — só aparece depois de rolar a página, some no topo. */
+  .topo {
+    display: none;
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #dcd7cb;
+    border-radius: 50%;
+    background: #fff;
+    color: #1a1d1f;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  }
+
+  .topo.visivel {
+    display: flex;
+  }
+
+  .topo:hover {
+    background: #f0ede5;
+  }
+
   .lightbox img {
     max-width: 100%;
     max-height: 100%;
@@ -79,6 +129,10 @@
 </style>
 </head>
 <body>
+
+<div class="voltar">
+  <a href="https://erp-marmoraria.skyllerx.workers.dev/">← Voltar para o site</a>
+</div>
 
 <h1>Tutorial</h1>
 
@@ -159,11 +213,19 @@
   <img id="lightbox-img" src="" alt="">
 </div>
 
+<button class="topo" id="topo" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" aria-label="Voltar ao topo" title="Voltar ao topo">↑</button>
+
 <script>
   function abrirImagem(img) {
     document.getElementById('lightbox-img').src = img.src;
     document.getElementById('lightbox').classList.add('aberto');
   }
+
+  // Botão de topo só aparece depois de rolar um pouco a página.
+  const botaoTopo = document.getElementById('topo');
+  window.addEventListener('scroll', () => {
+    botaoTopo.classList.toggle('visivel', window.scrollY > 400);
+  });
 </script>
 
 </body>
