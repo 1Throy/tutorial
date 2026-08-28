@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Do Orçamento ao PDF</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+  :root {
+    --ground: #F3F5F7;
+    --surface: #FFFFFF;
+    --surface-2: #E9EDF1;
+    --ink: #141A21;
+    --ink-2: #47535F;
+    --ink-3: #76838F;
+    --rule: #D3DAE1;
+    --rule-soft: #E4E9EE;
+    --accent: #1B3A5C;
+    --accent-soft: #E3EAF2;
+    --accent-ink: #1B3A5C;
+    --warn: #9A5B08;
+    --warn-soft: #FCF3E3;
+    --warn-rule: #E8C99A;
+    --good: #06694E;
+    --good-soft: #E2F1EC;
+
+    /* recriações da interface — cores retiradas do próprio app */
+    --ui-peca-bg: #FFFBEB;
+    --ui-peca-head: #FEF3C7;
+    --ui-peca-rule: #FBBF24;
+    --ui-mat: #312E81;
+    --ui-tot: #059669;
+    --ui-bar: #1E293B;
+    --ui-chip: #FDE68A;
+    --ui-field: #FFFFFF;
+    --ui-field-rule: #CBD5E1;
+    --ui-label: #64748B;
+    --ui-ink: #0F172A;
+    --it-mat: #1D4ED8;
+    --it-ac: #0369A1;
+
+    --step-h: 1.6;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #10141A;
+      --surface: #171D25;
+      --surface-2: #1F2732;
+      --ink: #E6EAEF;
+      --ink-2: #A9B4C0;
+      --ink-3: #7C8894;
+      --rule: #2C3742;
+      --rule-soft: #232C36;
+      --accent: #8FB3D6;
+      --accent-soft: #1B2836;
+      --accent-ink: #A9C6E3;
+      --warn: #E0A85C;
+      --warn-soft: #2A2114;
+      --warn-rule: #5A4526;
+      --good: #5FC3A3;
+      --good-soft: #14261F;
+
+      --ui-peca-bg: #241E0E;
+      --ui-peca-head: #33290F;
+      --ui-peca-rule: #8A6B1B;
+      --ui-mat: #2A2870;
+      --ui-tot: #0B5B45;
+      --ui-bar: #131A24;
+      --ui-chip: #4A3A12;
+      --ui-field: #1B222B;
+      --ui-field-rule: #39434F;
+      --ui-label: #8A96A3;
+      --ui-ink: #DDE3EA;
+      --it-mat: #8FB6F5;
+      --it-ac: #79C2E4;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #10141A;
+    --surface: #171D25;
+    --surface-2: #1F2732;
+    --ink: #E6EAEF;
+    --ink-2: #A9B4C0;
+    --ink-3: #7C8894;
+    --rule: #2C3742;
+    --rule-soft: #232C36;
+    --accent: #8FB3D6;
+    --accent-soft: #1B2836;
+    --accent-ink: #A9C6E3;
+    --warn: #E0A85C;
+    --warn-soft: #2A2114;
+    --warn-rule: #5A4526;
+    --good: #5FC3A3;
+    --good-soft: #14261F;
+
+    --ui-peca-bg: #241E0E;
+    --ui-peca-head: #33290F;
+    --ui-peca-rule: #8A6B1B;
+    --ui-mat: #2A2870;
+    --ui-tot: #0B5B45;
+    --ui-bar: #131A24;
+    --ui-chip: #4A3A12;
+    --ui-field: #1B222B;
+    --ui-field-rule: #39434F;
+    --ui-label: #8A96A3;
+    --ui-ink: #DDE3EA;
+    --it-mat: #8FB6F5;
+    --it-ac: #79C2E4;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 16.5px;
+    line-height: var(--step-h);
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 60rem;
+    margin: 0 auto;
+    padding: clamp(1.75rem, 4vw, 4rem) clamp(1.1rem, 4vw, 2.5rem) 5rem;
+  }
+
+  /* ---------- navegação ---------- */
+  .navegar { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: 2.25rem; }
+  .navegar a {
+    display: inline-flex; align-items: center;
+    padding: .45rem .85rem;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    background: var(--surface);
+    color: var(--ink-2);
+    font-size: .85rem;
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .navegar a:hover { background: var(--surface-2); color: var(--ink); }
+  .navegar a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- cabeçalho ---------- */
+  .eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .72rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0 0 1.1rem;
+  }
+  h1 {
+    font-family: Spectral, Georgia, "Times New Roman", serif;
+    font-weight: 700;
+    font-size: clamp(2.3rem, 6vw, 3.6rem);
+    line-height: 1.04;
+    letter-spacing: -.015em;
+    text-wrap: balance;
+    margin: 0 0 1rem;
+  }
+  .standfirst {
+    font-family: Spectral, Georgia, serif;
+    font-size: clamp(1.05rem, 2.2vw, 1.25rem);
+    line-height: 1.55;
+    color: var(--ink-2);
+    max-width: 44ch;
+    margin: 0 0 2.5rem;
+  }
+
+  /* ---------- ficha do exemplo ---------- */
+  .ficha {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 1.4rem 1.5rem;
+    margin-bottom: 3.5rem;
+  }
+  .ficha h2 {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .72rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 500;
+    margin: 0 0 1rem;
+  }
+  .ficha-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 1.1rem 1.75rem;
+  }
+  .ficha-item .k {
+    display: block;
+    font-size: .74rem;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: .15rem;
+  }
+  .ficha-item .v {
+    font-weight: 600;
+    font-size: .98rem;
+    color: var(--ink);
+  }
+  .ficha-item .v.num {
+    font-family: "IBM Plex Mono", monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- passos ---------- */
+  .passo {
+    display: grid;
+    grid-template-columns: 3.25rem 1fr;
+    gap: 0 1.25rem;
+    margin-bottom: 3.75rem;
+  }
+  .passo-n {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .82rem;
+    font-weight: 600;
+    color: var(--accent-ink);
+    background: var(--accent-soft);
+    border-radius: 2px;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: .3rem;
+  }
+  .passo-corpo { min-width: 0; }
+  .passo h2 {
+    font-family: Spectral, Georgia, serif;
+    font-size: clamp(1.5rem, 3.2vw, 1.95rem);
+    font-weight: 600;
+    line-height: 1.18;
+    letter-spacing: -.01em;
+    text-wrap: balance;
+    margin: 0 0 .7rem;
+  }
+  .passo-corpo > p { margin: 0 0 1rem; max-width: 66ch; color: var(--ink-2); }
+  .passo-corpo > p strong { color: var(--ink); font-weight: 600; }
+
+  code, .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; }
+  p code, li code {
+    font-size: .88em;
+    background: var(--surface-2);
+    padding: .1em .35em;
+    border-radius: 2px;
+    color: var(--ink);
+  }
+
+  ul.lista { margin: 0 0 1.15rem; padding-left: 1.1rem; max-width: 66ch; color: var(--ink-2); }
+  ul.lista li { margin-bottom: .45rem; }
+  ul.lista li strong { color: var(--ink); font-weight: 600; }
+
+  /* ---------- recriações da tela ---------- */
+  .tela {
+    margin: 1.35rem 0 1.2rem;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid var(--rule);
+    background: var(--surface);
+    font-size: .84rem;
+  }
+  .tela-cap {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .69rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding: .5rem .8rem;
+    border-bottom: 1px solid var(--rule-soft);
+    background: var(--surface-2);
+  }
+  .tela-corpo { padding: .95rem; overflow-x: auto; }
+
+  .ui-peca { background: var(--ui-peca-bg); border: 1px solid var(--ui-peca-rule); border-left-width: 4px; border-radius: 3px; }
+  .ui-peca-head {
+    background: var(--ui-peca-head);
+    padding: .45rem .7rem;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    font-weight: 600;
+    color: var(--ui-ink);
+  }
+  .ui-num {
+    background: #F59E0B; color: #3B2606; font-weight: 700;
+    width: 1.2rem; height: 1.2rem; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: .7rem; flex: none;
+  }
+  .ui-peca-body { padding: .8rem .7rem; }
+
+  .campos { display: flex; flex-wrap: wrap; gap: .8rem; margin-bottom: .7rem; }
+  .campo { min-width: 8.5rem; }
+  .campo .lab { display: block; font-size: .68rem; color: var(--ui-label); margin-bottom: .22rem; }
+  .campo .box {
+    background: var(--ui-field);
+    border: 1px solid var(--ui-field-rule);
+    border-radius: 3px;
+    padding: .32rem .5rem;
+    font-family: "IBM Plex Mono", monospace;
+    color: var(--ui-ink);
+    display: flex; align-items: center; justify-content: space-between; gap: .5rem;
+  }
+  .chip {
+    background: var(--ui-chip); color: var(--warn);
+    font-size: .68rem; font-weight: 600; padding: .05rem .3rem; border-radius: 2px;
+    font-family: "IBM Plex Mono", monospace;
+  }
+  .nota-tela { font-size: .74rem; color: var(--ui-label); margin: 0; }
+  .nota-tela b { color: var(--ui-ink); }
+
+  table.custos { width: 100%; border-collapse: collapse; font-size: .82rem; min-width: 25rem; }
+  table.custos th {
+    text-align: left; font-size: .66rem; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--ui-label); font-weight: 500; padding: .35rem .5rem; border-bottom: 1px solid var(--ui-field-rule);
+  }
+  table.custos th.r, table.custos td.r { text-align: right; }
+  table.custos td { padding: .34rem .5rem; border-bottom: 1px solid var(--rule-soft); color: var(--ui-ink); }
+  table.custos td.n { font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums; }
+  table.custos tr.off td { color: var(--ink-3); }
+  table.custos tr.tot td { font-weight: 700; border-bottom: none; border-top: 1.5px solid var(--ui-field-rule); }
+  /* escopadas em table.custos: `table.custos td` tem especificidade maior que
+     uma classe sozinha e engolia estas cores. */
+  table.custos td.it-mat { color: var(--it-mat); font-weight: 600; }
+  table.custos td.it-ac { color: var(--it-ac); font-weight: 600; }
+  table.custos td.it-on { color: var(--good); font-weight: 600; }
+
+  .faixa-mat {
+    background: var(--ui-mat); color: #EEF1FF;
+    font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; font-weight: 600;
+    padding: .45rem .7rem;
+  }
+  .faixa-tot {
+    background: var(--ui-tot); color: #ECFDF5;
+    font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; font-weight: 600;
+    padding: .45rem .7rem;
+  }
+  .linha-mat {
+    display: flex; align-items: center; gap: .6rem; padding: .55rem .7rem;
+    background: var(--ui-field); color: var(--ui-ink);
+  }
+  .linha-mat .nome { flex: 1; font-weight: 500; }
+
+  .barra-total {
+    background: var(--ui-bar); color: #E2E8F0;
+    display: flex; flex-wrap: wrap; gap: 1.5rem;
+    padding: .8rem 1rem;
+  }
+  .barra-total .bt { min-width: 7rem; }
+  .barra-total .bt .k { display: block; font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; color: #94A3B8; }
+  .barra-total .bt .v { font-family: "IBM Plex Mono", monospace; font-size: 1.05rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .barra-total .bt.destaque .v { color: #4ADE80; }
+
+  /* ---------- conta ---------- */
+  .conta {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    border-radius: 3px;
+    padding: .9rem 1.1rem;
+    margin: 1.2rem 0;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .84rem;
+    font-variant-numeric: tabular-nums;
+    overflow-x: auto;
+  }
+  .conta .cl { display: flex; justify-content: space-between; gap: 1.5rem; padding: .17rem 0; color: var(--ink-2); white-space: nowrap; }
+  .conta .cl .r { color: var(--ink); font-weight: 500; }
+  .conta .cl.soma { border-top: 1px solid var(--rule); margin-top: .4rem; padding-top: .5rem; font-weight: 600; }
+  .conta .cl.soma .r { color: var(--good); font-weight: 700; }
+  .conta-tit {
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: .68rem; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--ink-3); margin-bottom: .5rem;
+  }
+
+  /* ---------- avisos ---------- */
+  .aviso {
+    background: var(--warn-soft);
+    border: 1px solid var(--warn-rule);
+    border-radius: 3px;
+    padding: 1rem 1.15rem;
+    margin: 1.35rem 0;
+  }
+  .aviso .t {
+    font-weight: 600; color: var(--warn); margin: 0 0 .35rem;
+    font-size: .95rem;
+  }
+  .aviso p { margin: 0; color: var(--ink-2); max-width: none; font-size: .93rem; }
+  .aviso p + p { margin-top: .55rem; }
+  .aviso .mono { color: var(--ink); font-weight: 500; }
+
+  /* ---------- seções finais ---------- */
+  .sec { margin-top: 4rem; padding-top: 2.5rem; border-top: 1px solid var(--rule); }
+  .sec > h2 {
+    font-family: Spectral, Georgia, serif;
+    font-size: clamp(1.55rem, 3.4vw, 2.05rem);
+    font-weight: 600; line-height: 1.15; letter-spacing: -.01em;
+    margin: 0 0 1.4rem; text-wrap: balance;
+  }
+
+  .conf { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  .conf caption { text-align: left; font-size: .78rem; color: var(--ink-3); margin-bottom: .6rem; }
+  .conf th {
+    text-align: left; font-size: .68rem; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--ink-3); font-weight: 500; padding: .45rem .6rem; border-bottom: 1px solid var(--rule);
+  }
+  .conf th.r, .conf td.r { text-align: right; }
+  .conf td { padding: .5rem .6rem; border-bottom: 1px solid var(--rule-soft); color: var(--ink-2); }
+  .conf td.n { font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums; color: var(--ink); }
+  .conf tr.destaque td { background: var(--good-soft); color: var(--ink); font-weight: 600; }
+  .conf tr.destaque td.n { color: var(--good); }
+  .conf-wrap { overflow-x: auto; }
+
+  .erro { border-left: 3px solid var(--rule); padding: 0 0 0 1.1rem; margin-bottom: 1.75rem; }
+  .erro h3 {
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 1rem; font-weight: 600; margin: 0 0 .3rem; color: var(--ink);
+  }
+  .erro p { margin: 0; color: var(--ink-2); font-size: .95rem; max-width: 68ch; }
+
+  footer.fim {
+    margin-top: 4rem; padding-top: 1.75rem; border-top: 1px solid var(--rule);
+    font-size: .84rem; color: var(--ink-3); max-width: 68ch;
+  }
+  footer.fim p { margin: 0 0 .6rem; }
+
+  @media (max-width: 34rem) {
+    .passo { grid-template-columns: 1fr; gap: 0; }
+    .passo-n { width: 2rem; margin-bottom: .6rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+
+  <nav class="navegar">
+    <a href="https://erp-marmoraria.skyllerx.workers.dev/">← Voltar para o site</a>
+    <a href="index.html">Tutorial com imagens</a>
+  </nav>
+
+  <p class="eyebrow">ERP Marmoraria · Guia do vendedor</p>
+  <h1>Do Orçamento ao PDF</h1>
+  <p class="standfirst">Um orçamento de cozinha montado do zero, tela por tela, com todas as contas abertas — para você conferir número por número enquanto faz o seu.</p>
+
+  <div class="ficha">
+    <h2>O exemplo deste guia</h2>
+    <div class="ficha-grid">
+      <div class="ficha-item"><span class="k">Cliente</span><span class="v">Danilo</span></div>
+      <div class="ficha-item"><span class="k">Ambiente</span><span class="v">Cozinha</span></div>
+      <div class="ficha-item"><span class="k">Material</span><span class="v">Granito Preto São Gabriel</span></div>
+      <div class="ficha-item"><span class="k">Preço do material</span><span class="v num">R$ 850,00/m²</span></div>
+      <div class="ficha-item"><span class="k">Peças</span><span class="v">1 bancada + 2 soleiras</span></div>
+      <div class="ficha-item"><span class="k">Total no PDF</span><span class="v num">R$ 2.485,35</span></div>
+    </div>
+  </div>
+
+  <!-- 1 -->
+  <section class="passo">
+    <div class="passo-n">1</div>
+    <div class="passo-corpo">
+      <h2>Abrir o orçamento e escolher o cliente</h2>
+      <p>No menu, <strong>Orçamentos → Novo orçamento</strong>. O primeiro campo é o cliente: digite parte do nome e escolha na lista.</p>
+      <p>Ao escolher, o <strong>Endereço da Obra</strong> se preenche sozinho com o endereço do cadastro do cliente. É só um ponto de partida — pode trocar, porque a obra nem sempre é no endereço dele.</p>
+      <ul class="lista">
+        <li><strong>Número do orçamento</strong> — deixe em branco que o sistema numera sozinho. Só preencha se quiser um número específico (aceita formato livre, como <code>212-21</code>).</li>
+        <li><strong>Validade</strong> — a data em que a proposta caduca. Alimenta o aviso de follow-up no painel.</li>
+        <li><strong>Status</strong> — comece em <em>Rascunho</em>. Só mude para <em>Aprovado</em> quando o cliente fechar: isso <strong>cria o pedido automaticamente</strong>.</li>
+      </ul>
+
+      <div class="aviso">
+        <p class="t">As três taxas do topo fazem coisas diferentes</p>
+        <p><span class="mono">RT 15%</span> — comissão do arquiteto. Desmarcada, não aparece em lugar nenhum do PDF.</p>
+        <p><span class="mono">+5% nas peças só no PDF</span> — vem marcada. Os valores do editor <strong>não</strong> mostram esse acréscimo; o PDF mostra. É a diferença que mais confunde, e o passo 7 mostra ela acontecendo.</p>
+        <p><span class="mono">Desconto à vista 5%</span> — o desconto que gera a linha “À VISTA” do PDF.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="passo">
+    <div class="passo-n">2</div>
+    <div class="passo-corpo">
+      <h2>Criar o ambiente e o material dele</h2>
+      <p>Clique em <strong>Novo ambiente</strong> e dê um nome: <em>Cozinha</em>. Ambiente é a divisão da obra — Cozinha, Banheiro, Área gourmet.</p>
+      <p>O material fica <strong>dentro do ambiente</strong>, não no orçamento inteiro. É isso que deixa cada ambiente ter sua própria pedra, e permite pôr dois materiais lado a lado no mesmo ambiente para o cliente comparar preços.</p>
+
+      <div class="tela">
+        <p class="tela-cap">Materiais deste ambiente</p>
+        <div class="faixa-mat">◈ Materiais deste ambiente</div>
+        <div class="linha-mat">
+          <span class="ui-num" style="background:#C7D2FE;color:#312E81">1</span>
+          <span class="nome">Granito Preto São Gabriel</span>
+          <span class="mono">R$/m² <b>850</b></span>
+        </div>
+      </div>
+
+      <p>Nesta mesma faixa ficam dois atalhos que economizam muito tempo, usados no passo 5: <strong>Soleiras, peitoris</strong> e <strong>Escadas</strong>.</p>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section class="passo">
+    <div class="passo-n">3</div>
+    <div class="passo-corpo">
+      <h2>A primeira peça e a sobra de material</h2>
+      <p>Clique em <strong>+ Peça</strong> e dê o nome: <em>Bancada da pia</em>. Agora o ponto mais importante do sistema inteiro — as medidas.</p>
+      <p>A bancada mede <strong>2,10 × 0,60</strong>, mas você corta com 20 cm de folga em cada lado. Escreva a folga na própria medida, com o sinal de mais:</p>
+
+      <div class="tela">
+        <p class="tela-cap">Medidas da peça</p>
+        <div class="tela-corpo">
+          <div class="ui-peca">
+            <div class="ui-peca-head"><span class="ui-num">1</span> Bancada da pia</div>
+            <div class="ui-peca-body">
+              <div class="campos">
+                <div class="campo">
+                  <span class="lab">Comprimento (m)</span>
+                  <span class="box">2,10+0,20 <span class="chip">2,30</span></span>
+                </div>
+                <div class="campo">
+                  <span class="lab">Largura (m)</span>
+                  <span class="box">0,60+0,20 <span class="chip">0,80</span></span>
+                </div>
+                <div class="campo">
+                  <span class="lab">M² faturada</span>
+                  <span class="box"><b>1,84</b></span>
+                </div>
+              </div>
+              <p class="nota-tela">Sai no PDF como <b>2,10 × 0,60 m</b> · cobrando <b>2,30 × 0,80 m</b> (sobra de material na base)</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p>Leia essa última linha com atenção, porque é a regra toda em uma frase: <strong>o cliente lê a medida limpa, a chapa é cortada com a folga.</strong> A etiqueta amarela ao lado de cada campo mostra o total que vai ser cobrado.</p>
+
+      <div class="conta">
+        <p class="conta-tit">De onde vem o m² faturado</p>
+        <div class="cl"><span>2,10 + 0,20 (comprimento com sobra)</span><span class="r">2,30 m</span></div>
+        <div class="cl"><span>0,60 + 0,20 (largura com sobra)</span><span class="r">0,80 m</span></div>
+        <div class="cl soma"><span>2,30 × 0,80</span><span class="r">1,84 m²</span></div>
+      </div>
+
+      <p>Se não houver folga, escreva só <code>2,10</code> e pronto. A soma é opcional.</p>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section class="passo">
+    <div class="passo-n">4</div>
+    <div class="passo-corpo">
+      <h2>Os custos da peça</h2>
+      <p>Logo abaixo das medidas está a tabela de custos. A linha <strong>Material</strong> é calculada — você não digita nada nela. As outras você preenche com a quantidade.</p>
+
+      <div class="tela">
+        <p class="tela-cap">Tabela de custos · Bancada da pia</p>
+        <div class="tela-corpo">
+          <table class="custos">
+            <thead>
+              <tr><th>Item</th><th class="r">Qtd</th><th class="r">R$ unit</th><th class="r">R$ total</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="it-mat">Material</td>
+                <td class="r n">1,84 m²</td><td class="r n">R$ 850,00</td><td class="r n"><b>R$ 1.564,00</b></td>
+              </tr>
+              <tr>
+                <td class="it-ac">Acabamento <span style="color:var(--ui-label);font-weight:400">(m linear)</span></td>
+                <td class="r n">2,7</td><td class="r n">65</td><td class="r n"><b>R$ 175,50</b></td>
+              </tr>
+              <tr class="off"><td>Impermeabilização</td><td class="r n">0</td><td class="r n">30</td><td class="r">—</td></tr>
+              <tr>
+                <td class="it-on">Colagem cuba / lixeira</td>
+                <td class="r n">1</td><td class="r n">150</td><td class="r n"><b>R$ 150,00</b></td>
+              </tr>
+              <tr class="off"><td>Cuba flush / americano</td><td class="r n">0</td><td class="r n">500</td><td class="r">—</td></tr>
+              <tr>
+                <td class="it-on">Recorte cooktop / churrasqueira</td>
+                <td class="r n">1</td><td class="r n">150</td><td class="r n"><b>R$ 150,00</b></td>
+              </tr>
+              <tr class="off"><td>Instalação</td><td class="r n">0</td><td class="r n">220</td><td class="r">—</td></tr>
+              <tr class="tot"><td>Subtotal da peça</td><td></td><td></td><td class="r n">R$ 2.039,50</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <p>Duas coisas que valem entender aqui:</p>
+      <ul class="lista">
+        <li><strong>O acabamento se preenche sozinho</strong> em metro linear: comprimento + largura, ou seja <code>2,10 + 0,60 = 2,70 m</code>. Se na sua peça só duas bordas levam acabamento, digite o valor certo por cima — a partir daí o campo para de acompanhar a medida e respeita o que você escreveu.</li>
+        <li><strong>O “R$ unit” do material é o preço por m² e não muda com a quantidade.</strong> Quem sobe com a quantidade de peças é o m². Se você puser Qtd 2 nesta bancada, vira 3,68 m² × R$ 850,00.</li>
+      </ul>
+
+      <p>Os itens sem quantidade ficam apagados e não somam nada. Se faltar algum serviço na lista, use <strong>+ Item livre</strong> no fim da tabela.</p>
+
+      <div class="aviso">
+        <p class="t">O bloco “Só para a descrição” não mexe no preço</p>
+        <p>À direita ficam <span class="mono">Frontão h (cm)</span>, <span class="mono">Saia (cm)</span> e <span class="mono">Acabamento</span> (45º, Boleado, Reto…). Esses três campos só escrevem o texto que o cliente lê no PDF. Preenchemos <span class="mono">10</span>, <span class="mono">4</span> e <span class="mono">45º</span> — e o total da peça continuou exatamente o mesmo.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section class="passo">
+    <div class="passo-n">5</div>
+    <div class="passo-corpo">
+      <h2>Soleiras pelo atalho</h2>
+      <p>Soleira, peitoril e degrau não precisam de uma peça inteira aberta. Use a barra <strong>Soleiras, peitoris</strong> no topo do ambiente: local, comprimento, largura e quantidade — e <strong>Adicionar</strong>.</p>
+      <p>Lançamos <em>Soleira da porta</em>, <code>0,80 × 0,15</code>, quantidade <code>2</code>. A peça nasce recolhida, para não poluir a tela, e já com o acabamento calculado em metro linear.</p>
+
+      <div class="conta">
+        <p class="conta-tit">Cada soleira</p>
+        <div class="cl"><span>Material · 0,80 × 0,15 = 0,12 m² × R$ 850,00</span><span class="r">R$ 102,00</span></div>
+        <div class="cl"><span>Acabamento · (0,80 + 0,15) = 0,95 m × R$ 65,00</span><span class="r">R$ 61,75</span></div>
+        <div class="cl soma"><span>Uma soleira × 2 unidades</span><span class="r">R$ 327,50</span></div>
+      </div>
+
+      <p>A descrição dela no PDF já sai pronta e fixa: <strong>“Soleira da porta 80x15”</strong>.</p>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section class="passo">
+    <div class="passo-n">6</div>
+    <div class="passo-corpo">
+      <h2>Conferir os totais e salvar</h2>
+      <p>A barra escura no rodapé acompanha tudo ao vivo, e continua visível enquanto você rola a tela:</p>
+
+      <div class="tela">
+        <p class="tela-cap">Total geral · ao vivo</p>
+        <div class="barra-total">
+          <div class="bt"><span class="k">Subtotal</span><span class="v">R$ 2.367,00</span></div>
+          <div class="bt destaque"><span class="k">À vista (−5%)</span><span class="v">R$ 2.248,65</span></div>
+          <div class="bt"><span class="k">Arquiteto (+15%)</span><span class="v">R$ 2.722,05</span></div>
+        </div>
+      </div>
+
+      <p>E o painel <strong>Metragem</strong> mostra quanto sai de chapa — <code>1,84 + 0,24 = 2,08 m²</code> —, já contando a quantidade de cada peça. É o número que serve para conferir se a chapa comprada dá conta.</p>
+      <p>Clique em <strong>Salvar</strong>. O orçamento ganha número e o botão passa a se chamar só “Salvar” de novo (com asterisco, <em>Salvar*</em>, quer dizer que há alteração ainda não gravada).</p>
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section class="passo">
+    <div class="passo-n">7</div>
+    <div class="passo-corpo">
+      <h2>O PDF — e o pulo dos 5%</h2>
+      <p>Com o orçamento salvo, use <strong>Ver PDF</strong>. A descrição de cada peça já vem escrita a partir das medidas que você digitou:</p>
+
+      <div class="tela">
+        <p class="tela-cap">Descrição gerada automaticamente</p>
+        <div class="tela-corpo">
+          <p class="nota-tela" style="font-size:.86rem;line-height:1.5">Bancada da pia 2,10 x 0,60, com frontão até h=10cm, acabamento 45º, saia de 4cm, colagem de 1 cuba (fornec. cliente), recorte p/ cooktop</p>
+        </div>
+      </div>
+
+      <p>Repare que ela usa a medida <strong>limpa</strong> (2,10 × 0,60), e traz o frontão, a saia e o acabamento que você preencheu no bloco de descrição. Dá para editar o texto à mão na tela do PDF; “refazer automático” volta ao gerado.</p>
+
+      <div class="aviso">
+        <p class="t">O total do PDF é maior que o do editor — e está certo</p>
+        <p>O editor mostrava <span class="mono">R$ 2.367,00</span>. O PDF mostra <span class="mono">R$ 2.485,35</span>. A diferença são os <strong>+5% nas peças só no PDF</strong>, marcados lá no topo: <span class="mono">2.367,00 × 1,05 = 2.485,35</span>.</p>
+        <p>Se você não quer esse acréscimo, desmarque a caixa no topo do orçamento — os dois valores passam a bater.</p>
+      </div>
+
+      <div class="conta">
+        <p class="conta-tit">Como o PDF fecha</p>
+        <div class="cl"><span>Bancada da pia · 2.039,50 × 1,05</span><span class="r">R$ 2.141,48</span></div>
+        <div class="cl"><span>Soleira da porta (2 un) · 327,50 × 1,05</span><span class="r">R$ 343,88</span></div>
+        <div class="cl soma"><span>TOTAL</span><span class="r">R$ 2.485,35</span></div>
+        <div class="cl" style="margin-top:.5rem"><span>À VISTA · 2.485,35 − 5%</span><span class="r">R$ 2.361,08</span></div>
+      </div>
+
+      <p>No cabeçalho do PDF, ao lado do número do orçamento, aparece <strong>Versão 1</strong>. Salvar de novo <em>não</em> muda esse número: ele só sobe quando você clica em <strong>Alterar Versão</strong>, no editor. Serve para quando o cliente pede mudança e você quer deixar claro qual proposta é qual — o botão <strong>Versões</strong>, na tela do PDF, lista todas e deixa reabrir as antigas.</p>
+    </div>
+  </section>
+
+  <!-- conferência -->
+  <section class="sec">
+    <h2>Confira as contas</h2>
+    <div class="conf-wrap">
+      <table class="conf">
+        <caption>Todos os números do exemplo, na ordem em que aparecem.</caption>
+        <thead>
+          <tr><th>Etapa</th><th>Conta</th><th class="r">Valor</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Área da bancada</td><td class="n">2,30 × 0,80</td><td class="r n">1,84 m²</td></tr>
+          <tr><td>Material da bancada</td><td class="n">1,84 × 850</td><td class="r n">R$ 1.564,00</td></tr>
+          <tr><td>Acabamento da bancada</td><td class="n">2,70 × 65</td><td class="r n">R$ 175,50</td></tr>
+          <tr><td>Cuba + cooktop</td><td class="n">150 + 150</td><td class="r n">R$ 300,00</td></tr>
+          <tr><td>Subtotal da bancada</td><td class="n">1.564,00 + 175,50 + 300,00</td><td class="r n">R$ 2.039,50</td></tr>
+          <tr><td>Soleiras (2 un)</td><td class="n">(102,00 + 61,75) × 2</td><td class="r n">R$ 327,50</td></tr>
+          <tr><td>Subtotal do ambiente</td><td class="n">2.039,50 + 327,50</td><td class="r n">R$ 2.367,00</td></tr>
+          <tr><td>À vista no editor</td><td class="n">2.367,00 − 5%</td><td class="r n">R$ 2.248,65</td></tr>
+          <tr><td>Arquiteto</td><td class="n">2.367,00 + 15%</td><td class="r n">R$ 2.722,05</td></tr>
+          <tr class="destaque"><td>Total no PDF</td><td class="n">2.367,00 + 5%</td><td class="r n">R$ 2.485,35</td></tr>
+          <tr class="destaque"><td>À vista no PDF</td><td class="n">2.485,35 − 5%</td><td class="r n">R$ 2.361,08</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- erros -->
+  <section class="sec">
+    <h2>Onde as pessoas erram</h2>
+
+    <div class="erro">
+      <h3>Achar que a sobra muda o texto do PDF</h3>
+      <p>Não muda. <code>2,10+0,20</code> cobra 2,30 m, mas o cliente continua lendo 2,10 m. Quem escreve o texto são os campos do bloco “Só para a descrição” — frontão, saia e acabamento.</p>
+    </div>
+
+    <div class="erro">
+      <h3>Comparar o total do editor com o do PDF</h3>
+      <p>Enquanto os <strong>+5% nas peças só no PDF</strong> estiverem marcados, os dois vão ser diferentes de propósito. Compare com o valor certo antes de achar que é erro.</p>
+    </div>
+
+    <div class="erro">
+      <h3>Digitar o acabamento e depois mudar a medida</h3>
+      <p>Assim que você escreve um valor próprio no acabamento, ele para de acompanhar a medida — de propósito, para não apagar o seu número. Se mudar comprimento ou largura depois disso, confira o acabamento à mão.</p>
+    </div>
+
+    <div class="erro">
+      <h3>Abrir uma peça nova para cada pedaço da mesma bancada</h3>
+      <p>Bancada em L, pia em U, retorno lateral: tudo isso é <strong>uma peça só</strong>, com os pedaços lançados em <strong>+ Medida extra</strong>. Peça nova é para item diferente — outra bancada, outro tanque.</p>
+    </div>
+
+    <div class="erro">
+      <h3>Marcar “Aprovado” para testar</h3>
+      <p>Mudar o status para Aprovado <strong>cria o pedido na hora</strong>, automaticamente. Use Rascunho enquanto a proposta ainda está em negociação.</p>
+    </div>
+  </section>
+
+  <footer class="fim">
+    <p>Guia montado a partir de um orçamento real feito no sistema (Orçamento 12, cliente Danilo) — todos os valores foram conferidos contra o PDF gerado.</p>
+    <p>As telas acima são reconstruções fiéis da interface, com as cores e os textos do próprio sistema, e não fotos de tela.</p>
+  </footer>
+
+</div>
+</body>
+</html>
